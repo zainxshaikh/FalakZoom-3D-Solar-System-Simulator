@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FalakZoom</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+         overflow: hidden;
+        background: black;
+        font-family: "Poppins", "Cairo", Arial, sans-serif; /* Added Cairo */
+       }
+
+      #infoPanel {
+        position: absolute;
+         top: 70px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.88); /* Slightly more opaque */
+        color: white;
+         padding: 20px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        display: none;
+        max-width: 400px;
+ /* Slightly wider for more content */
+        max-height: calc(100vh - 90px);
+ /* Max height */
+        overflow-y: auto;
+ /* Allow scrolling if content exceeds height */
+        font-size: 14px;
+        line-height: 1.7;
+         z-index: 50;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        scrollbar-width: thin;
+ /* Firefox */
+        scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.5);
+ /* Firefox */
+      }
+       /* Webkit scrollbar styles */
+      #infoPanel::-webkit-scrollbar {
+        width: 8px;
+       }
+      #infoPanel::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.5);
+         border-radius: 10px;
+      }
+       #infoPanel::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.3);
+         border-radius: 10px;
+        border: 2px solid rgba(0, 0, 0, 0.5);
+      }
+
+
+      #infoPanel h2 {
+          margin-top: 0;
+           margin-bottom: 15px;
+          font-size: 18px;
+          font-weight: 600;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+          padding-bottom: 8px;
+       }
+
+      #infoPanel p {
+          margin-bottom: 10px;
+       }
+
+       #infoPanel .fact {
+           font-style: italic;
+            color: #cccccc;
+           margin-top: 15px;
+           padding-top: 10px;
+           border-top: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+
+       /* Read More Button Styles */
+       #readMoreBtn {
+           background-color: rgba(255, 255, 255, 0.15);
+            color: #e0e0e0;
+           border: 1px solid rgba(255, 255, 255, 0.3);
+           padding: 8px 15px;
+           border-radius: 5px;
+           cursor: pointer;
+           font-family: inherit;
+           font-size: 13px;
+            margin-top: 15px;
+           transition: background-color 0.3s, color 0.3s;
+           display: block; /* Make it block to take full width if needed */
+           width: fit-content;
+ /* Adjust width to content */
+       }
+        #readMoreBtn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+             color: white;
+        }
+
+       /* Extra Facts Container Styles */
+       #extraFactsContainer {
+           margin-top: 15px;
+            padding-top: 15px;
+           border-top: 1px solid rgba(255, 255, 255, 0.3);
+       }
+        #extraFactsContainer p {
+            font-size: 13px;
+ /* Slightly smaller */
+            color: #bbbbbb;
+ /* Slightly dimmer */
+            margin-bottom: 8px;
+            padding-left: 10px;
+ /* Indent facts */
+            position: relative;
+       }
+         /* Add bullet points visually */
+         #extraFactsContainer p::before {
+            content: '•';
+             position: absolute;
+            left: -2px; /* Adjust position based on language direction */
+            top: 0;
+             color: #66ccff; /* Accent color */
+         }
+          /* Adjust bullet for RTL */
+          [dir="rtl"] #extraFactsContainer p {
+            padding-left: 0;
+             padding-right: 10px;
+          }
+          [dir="rtl"] #extraFactsContainer p::before {
+             left: auto;
+              right: -2px;
+          }
+
+
+      #closeBtn {
+        position: absolute;
+         top: 10px;
+        right: 10px; /* Default to right */
+        width: 28px;
+        height: 28px;
+         font-size: 16px;
+        font-weight: bold;
+        color: #ff6b6b;
+        cursor: pointer;
+        transition: transform 0.3s ease, color 0.3s ease,
+          background 0.3s ease;
+         padding: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 51;
+ /* Ensure it's above content */
+      }
+
+      #closeBtn:hover {
+        color: #ff4757;
+         transform: scale(1.1) rotate(90deg);
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      #menuBar {
+        position: absolute;
+         top: 0;
+        left: 0;
+        width: 100%;
+        height: 50px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 0 20px;
+        box-sizing: border-box;
+        display: flex;
+         justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+       }
+
+      .menu-controls {
+          display: flex;
+           align-items: center;
+      }
+
+      .menu-item, #langToggleBtn {
+        position: relative;
+         color: white;
+        padding: 8px 15px;
+        margin-left: 10px;
+        cursor: pointer;
+        font-family: "Poppins", "Cairo", sans-serif;
+        border-radius: 4px;
+         transition: background 0.3s ease, color 0.3s ease;
+        font-size: 14px;
+        user-select: none;
+       }
+
+      .menu-item:hover, #langToggleBtn:hover {
+        background: rgba(255, 255, 255, 0.2);
+         color: #eee;
+      }
+
+      /* UPDATED DROPDOWN STYLE */
+      .dropdown {
+        position: absolute;
+        top: 100%;
+        /* REMOVED right: 0; - will be handled by LTR/RTL rules below */
+        background: rgba(25, 25, 25, 0.95);
+        min-width: 180px;
+        /* CHANGED border-radius to apply to all corners */
+        border-radius: 6px;
+        overflow: hidden;
+        display: none;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        /* REMOVED border-top: none; */
+        z-index: 110;
+      }
+
+       /* ADDED LTR/RTL positioning rules */
+       /* Default LTR positioning for the dropdown */
+       body[dir="ltr"] .menu-item .dropdown {
+           right: 0;
+           left: auto;
+           /* Optional: If you want sharp top corners touching the menu item in LTR */
+           /* border-top-left-radius: 0; */
+           /* border-top-right-radius: 0; */
+       }
+
+       /* Added RTL positioning for the dropdown */
+       body[dir="rtl"] .menu-item .dropdown {
+           right: auto; /* Override default */
+           left: 0;    /* Position from left */
+           /* Optional: If you want sharp top corners touching the menu item in RTL */
+           /* border-top-left-radius: 0; */
+           /* border-top-right-radius: 0; */
+       }
+
+      .dropdown.show {
+        display: block;
+       }
+
+      .dropdown-item {
+        padding: 12px 20px;
+        color: #e0e0e0;
+         text-decoration: none;
+        display: block;
+        transition: background 0.2s ease, color 0.2s ease;
+        font-size: 14px;
+        white-space: nowrap;
+       }
+
+      .dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.15);
+         color: white;
+      }
+
+      #title {
+        color: white;
+         font-family: "Poppins", sans-serif;
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+       /* Language Direction Adjustments */
+       body[dir="rtl"] #infoPanel {
+            left: auto;
+             right: 20px;
+            text-align: right;
+       }
+       body[dir="ltr"] #infoPanel {
+            left: 20px;
+             right: auto;
+            text-align: left;
+       }
+       body[dir="rtl"] #closeBtn {
+            left: 10px;
+             right: auto;
+       }
+       body[dir="ltr"] #closeBtn {
+            left: auto;
+             right: 10px;
+       }
+        body[dir="rtl"] #readMoreBtn {
+            margin-right: auto;
+ /* Align button left in RTL */
+        }
+        body[dir="ltr"] #readMoreBtn {
+            margin-left: auto;
+ /* Align button right in LTR */
+        }
+
+
+    </style>
+  </head>
+  <body dir="rtl"> <div id="menuBar">
+      <div id="title">FalakZoom</div>
+      <div class="menu-controls">
+        <div id="langToggleBtn">English</div>
+        <div class="menu-item" id="planetsMenu">
+          الكواكب
+          <div class="dropdown" id="planetsDropdown">
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="infoPanel">
+      <span id="closeBtn">X</span>
+      <h2 id="planetName"></h2>
+      <p id="planetInfo"></p>
+      <p id="planetFact" class="fact"></p>
+      <button id="readMoreBtn"></button> <div id="extraFactsContainer" style="display: none;">
+          </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
+    <script>
+      // --- Language and UI Text ---
+      let currentLanguage = 'ar';
+      let currentlyDisplayedPlanetId = null; // Track displayed planet ID
+
+      const uiText = {
+          planetsMenu: { ar: "الكواكب", en: "Planets" },
+          langToggle: { ar: "English", en: "العربية" },
+          readMore: { ar: "اقرأ المزيد", en: "Read More" },
+          // Optional: Add text for 'Hide Facts' if implementing toggle later
+      };
+
+      // --- Planet Data with Multilingual Support & Extra Facts ---
+      const planetsData = [
+        {
+          id: 0, name: { ar: "الشمس", en: "Sun" },
+          radius: 5, distance: 0, speed: 0, tilt: 0, rotation: 0.01, texture: "sun.jpg",
+          info: {
+            ar: "القطر: 1.391 مليون كيلومتر\nالكتلة: 1.989 × 10³⁰ كيلوغرام\nالعمر: 4.6 مليار سنة\nالنوع: نجم من النوع G\nدرجة حرارة النواة: 15 مليون درجة مئوية",
+            en: "Diameter: 1.391 million km\nMass: 1.989 × 10³⁰ kg\nAge: 4.6 billion years\nType: G-type main-sequence star\nCore Temperature: 15 million °C",
+          },
+          fact: {
+            ar: "الشمس تحتوي على 99.86% من كتلة النظام الشمسي وهي مصدر الطاقة الرئيسي للحياة على الأرض.",
+            en: "The Sun contains 99.86% of the Solar System's mass and is the primary source of energy for life on Earth.",
+          },
+          extraFacts: [
+             { ar: "تولد الشمس الطاقة من خلال الاندماج النووي، محولة الهيدروجين إلى هيليوم في نواتها.", en: "The Sun generates energy through nuclear fusion, converting hydrogen into helium in its core." },
+             { ar: "يستغرق ضوء الشمس حوالي 8 دقائق و 20 ثانية للوصول إلى الأرض.", en: "Light from the Sun takes about 8 minutes and 20 seconds to reach Earth." },
+             { ar: "للشمس مجال مغناطيسي قوي يسبب ظواهر مثل البقع الشمسية والتوهجات الشمسية.", en: "The Sun has a powerful magnetic field, which causes phenomena like sunspots and solar flares." }
+          ]
+        },
+        {
+          id: 1, name: { ar: "عطارد", en: "Mercury" },
+          radius: 0.5, distance: 10, speed: 0.0125, tilt: 0.034, rotation: 0.003, texture: "mercury.jpg",
+          info: {
+            ar: "القطر: 4,879 كيلومتر\nالكتلة: 3.3 × 10²³ كيلوغرام\nالمدار: 88 يومًا\nدرجة حرارة السطح: من -173°م إلى 427°م\nلا يوجد غلاف جوي تقريبًا",
+            en: "Diameter: 4,879 km\nMass: 3.3 × 10²³ kg\nOrbit: 88 days\nSurface Temp: -173°C to 427°C\nAlmost no atmosphere",
+          },
+          fact: {
+             ar: "يوم واحد على عطارد (دورة شمسية) يستغرق حوالي 176 يومًا أرضيًا بسبب دورانه البطيء ومداره السريع.",
+             en: "One solar day on Mercury lasts about 176 Earth days due to its slow rotation and fast orbit."
+          },
+          extraFacts: [
+              { ar: "عطارد هو أصغر كواكب النظام الشمسي ولديه أكبر تقلبات في درجات الحرارة بين الليل والنهار.", en: "Mercury is the smallest planet and has the most extreme temperature fluctuations between day and night." },
+              { ar: "يمتلك عطارد نواة حديدية ضخمة بشكل غير متناسب، تشكل حوالي 85% من قطر الكوكب.", en: "Mercury has a disproportionately large iron core, making up about 85% of the planet's radius."},
+              { ar: "على الرغم من قربه من الشمس، اكتشف جليد مائي في الفوهات القطبية المظللة بشكل دائم على عطارد.", en: "Despite its proximity to the Sun, water ice has been detected in permanently shadowed polar craters on Mercury." }
+          ]
+        },
+        {
+          id: 2, name: { ar: "الزهرة", en: "Venus" },
+          radius: 0.8, distance: 15, speed: 0.004375, tilt: 177.4, rotation: 0.0004, texture: "venus.jpg",
+          info: {
+            ar: "القطر: 12,104 كيلومتر\nالكتلة: 4.87 × 10²⁴ كيلوغرام\nالمدار: 225 يومًا\nدرجة حرارة السطح: 464°م\nغلاف جوي كثيف من ثاني أكسيد الكربون",
+            en: "Diameter: 12,104 km\nMass: 4.87 × 10²⁴ kg\nOrbit: 225 days\nSurface Temp: 464°C\nThick CO2 atmosphere",
+          },
+          fact: {
+              ar: "الزهرة هي أسخن كواكب المجموعة الشمسية وتدور بعكس اتجاه دوران معظم الكواكب الأخرى (حركة تراجعية).",
+              en: "Venus is the hottest planet and rotates backwards compared to most other planets (retrograde rotation)."
+          },
+          extraFacts: [
+              { ar: "الضغط الجوي على سطح الزهرة يعادل الضغط الموجود على عمق 900 متر تحت سطح البحر على الأرض.", en: "The atmospheric pressure on Venus's surface is equivalent to the pressure 900 meters underwater on Earth." },
+              { ar: "يوم واحد على الزهرة (243 يومًا أرضيًا) أطول من سنته (225 يومًا أرضيًا).", en: "A day on Venus (243 Earth days) is longer than its year (225 Earth days)." },
+              { ar: "تتكون سحب الزهرة بشكل أساسي من قطرات حمض الكبريتيك.", en: "Venus's clouds are primarily composed of sulfuric acid droplets." }
+          ]
+        },
+        {
+           id: 3, name: { ar: "الأرض", en: "Earth" },
+           radius: 1, distance: 20, speed: 0.003125, tilt: 23.5, rotation: 0.05, texture: "earth.jpg",
+           info: {
+             ar: "القطر: 12,742 كيلومتر\nالكتلة: 5.97 × 10²⁴ كيلوغرام\nالمدار: 365.25 يومًا\nدرجة حرارة السطح: من -88°م إلى 58°م\nمغطاة بنسبة 71% بالمياه",
+             en: "Diameter: 12,742 km\nMass: 5.97 × 10²⁴ kg\nOrbit: 365.25 days\nSurface Temp: -88°C to 58°C\n71% covered by water",
+           },
+           fact: {
+               ar: "الأرض هي الكوكب الوحيد المعروف حاليًا بوجود حياة ومياه سائلة على سطحه.",
+               en: "Earth is the only known planet to host life and have liquid water on its surface."
+           },
+           extraFacts: [
+               { ar: "يحمي المجال المغناطيسي للأرض الكوكب من الإشعاع الشمسي الضار والرياح الشمسية.", en: "Earth's magnetic field protects the planet from harmful solar radiation and solar wind." },
+               { ar: "تتكون الأرض من صفائح تكتونية تتحرك باستمرار، مسببة الزلازل والبراكين وتشكل الجبال.", en: "Earth is composed of tectonic plates that constantly move, causing earthquakes, volcanoes, and mountain formation." },
+               { ar: "القمر، التابع الطبيعي الوحيد للأرض، يؤثر على المد والجزر ويثبت ميل محور دوران الأرض.", en: "The Moon, Earth's only natural satellite, influences tides and stabilizes Earth's axial tilt." }
+           ]
+        },
+         {
+           id: 4, name: { ar: "المريخ", en: "Mars" },
+           radius: 0.7, distance: 25, speed: 0.0025, tilt: 25.2, rotation: 0.048, texture: "mars.jpg",
+           info: {
+             ar: "القطر: 6,792 كيلومتر\nالكتلة: 6.42 × 10²³ كيلوغرام\nالمدار: 687 يومًا\nدرجة حرارة السطح: من -153°م إلى 20°م\nغلاف جوي رقيق من ثاني أكسيد الكربون",
+             en: "Diameter: 6,792 km\nMass: 6.42 × 10²³ kg\nOrbit: 687 days\nSurface Temp: -153°C to 20°C\nThin CO2 atmosphere",
+           },
+           fact: {
+               ar: "يُعرف المريخ بالكوكب الأحمر بسبب أكسيد الحديد (الصدأ) على سطحه، ولديه أعلى بركان وأكبر وادي في النظام الشمسي.",
+               en: "Mars is known as the Red Planet due to iron oxide (rust) on its surface and has the tallest volcano and largest canyon in the Solar System."
+           },
+           extraFacts: [
+               { ar: "للمريخ قمران صغيران، فوبوس وديموس، يُعتقد أنهما كويكبات تم أسرها.", en: "Mars has two small moons, Phobos and Deimos, which are thought to be captured asteroids." },
+               { ar: "توجد أدلة قوية على وجود مياه سائلة على سطح المريخ في الماضي، وربما لا تزال موجودة تحت السطح.", en: "There is strong evidence that liquid water existed on Mars' surface in the past, and may still exist underground." },
+               { ar: "تحدث على المريخ أكبر العواصف الترابية في النظام الشمسي، ويمكن أن تغطي الكوكب بأكمله.", en: "Mars experiences the largest dust storms in the Solar System, which can sometimes cover the entire planet." }
+           ]
+        },
+        {
+           id: 5, name: { ar: "المشتري", en: "Jupiter" },
+           radius: 2.5, distance: 35, speed: 0.00125, tilt: 3.1, rotation: 0.1, texture: "jupiter.jpg",
+           info: {
+             ar: "القطر: 139,820 كيلومتر\nالكتلة: 1.898 × 10²⁷ كيلوغرام\nالمدار: 11.86 سنة\nدرجة حرارة السطح (قمم السحب): -145°م\nعملاق غازي",
+             en: "Diameter: 139,820 km\nMass: 1.898 × 10²⁷ kg\nOrbit: 11.86 years\nCloud Top Temp: -145°C\nGas giant",
+           },
+           fact: {
+               ar: "المشتري هو أكبر كواكب المجموعة الشمسية وبه البقعة الحمراء العظيمة، وهي عاصفة ضخمة مستمرة منذ قرون.",
+               en: "Jupiter is the largest planet and features the Great Red Spot, a giant storm raging for centuries."
+           },
+           extraFacts: [
+               { ar: "يمتلك المشتري أقوى مجال مغناطيسي بين جميع الكواكب، وهو أقوى بحوالي 20,000 مرة من مجال الأرض.", en: "Jupiter has the strongest magnetic field of any planet, about 20,000 times stronger than Earth's." },
+               { ar: "يدور المشتري حول محوره أسرع من أي كوكب آخر، حيث يكمل دورة واحدة في أقل من 10 ساعات.", en: "Jupiter rotates faster than any other planet, completing one rotation in just under 10 hours." },
+               { ar: "للمشتري نظام حلقات باهت والعديد من الأقمار، بما في ذلك الأقمار الجاليلية الأربعة الكبيرة: آيو، أوروبا، جانيميد، وكاليستو.", en: "Jupiter has a faint ring system and numerous moons, including the four large Galilean moons: Io, Europa, Ganymede, and Callisto." }
+           ]
+        },
+        {
+           id: 6, name: { ar: "زحل", en: "Saturn" },
+           radius: 2, distance: 45, speed: 0.0009375, tilt: 26.7, rotation: 0.09, texture: "saturn.jpg",
+           info: {
+             ar: "القطر: 116,460 كيلومتر\nالكتلة: 5.68 × 10²⁶ كيلوغرام\nالمدار: 29.46 سنة\nدرجة حرارة السطح (قمم السحب): -184°م\nعملاق غازي",
+             en: "Diameter: 116,460 km\nMass: 5.68 × 10²⁶ kg\nOrbit: 29.46 years\nCloud Top Temp: -184°C\nGas giant",
+           },
+           fact: {
+               ar: "يشتهر زحل بنظام حلقاته المذهل المكون أساسًا من جسيمات الجليد والصخور.",
+               en: "Saturn is famous for its stunning ring system, made mostly of ice particles and rock debris."
+           },
+           extraFacts: [
+               { ar: "زحل هو أقل الكواكب كثافة؛ كثافته أقل من كثافة الماء، مما يعني أنه سيطفو في حوض استحمام ضخم بما فيه الكفاية!", en: "Saturn is the least dense planet; it's less dense than water, meaning it would float in a large enough bathtub!" },
+               { ar: "أكبر أقمار زحل، تيتان، هو القمر الوحيد في النظام الشمسي الذي يمتلك غلافًا جويًا كثيفًا وبحيرات سائلة (من الميثان والإيثان) على سطحه.", en: "Saturn's largest moon, Titan, is the only moon in the Solar System with a thick atmosphere and liquid lakes (of methane/ethane) on its surface." },
+               { ar: "توجد عاصفة سداسية ضخمة ودائمة في القطب الشمالي لزحل.", en: "A large, persistent hexagonal-shaped storm exists at Saturn's north pole." }
+           ]
+        },
+        {
+          id: 7, name: { ar: "أورانوس", en: "Uranus" },
+          radius: 1.5, distance: 55, speed: 0.0005, tilt: 97.8, rotation: 0.06, texture: "uranus.jpg",
+          info: {
+            ar: "القطر: 50,724 كيلومتر\nالكتلة: 8.68 × 10²⁵ كيلوغرام\nالمدار: 84 سنة\nدرجة حرارة السطح (قمم السحب): -224°م\nعملاق جليدي",
+            en: "Diameter: 50,724 km\nMass: 8.68 × 10²⁵ kg\nOrbit: 84 years\nCloud Top Temp: -224°C\nIce giant",
+          },
+          fact: {
+              ar: "يدور أورانوس على جانبه بميل محوري يقارب 98 درجة، مما يجعله فريدًا بين الكواكب.",
+              en: "Uranus rotates on its side with an axial tilt of nearly 98 degrees, making it unique among planets."
+          },
+          extraFacts: [
+              { ar: "أورانوس هو أبرد كوكب في النظام الشمسي، على الرغم من أنه ليس الأبعد عن الشمس.", en: "Uranus is the coldest planet in the Solar System, despite not being the farthest from the Sun." },
+              { ar: "يُعتقد أن سبب ميله الشديد هو اصطدام هائل بجسم بحجم الأرض في بداية تاريخ النظام الشمسي.", en: "Its extreme tilt is thought to be the result of a massive collision with an Earth-sized object early in the Solar System's history." },
+              { ar: "مثل زحل، يمتلك أورانوس نظام حلقات، وإن كان أغمق وأقل وضوحًا.", en: "Like Saturn, Uranus possesses a ring system, although it is much darker and fainter." }
+          ]
+        },
+        {
+          id: 8, name: { ar: "نبتون", en: "Neptune" },
+          radius: 1.5, distance: 65, speed: 0.000375, tilt: 28.3, rotation: 0.07, texture: "neptune.jpg",
+          info: {
+            ar: "القطر: 49,244 كيلومتر\nالكتلة: 1.02 × 10²⁶ كيلوغرام\nالمدار: 164.8 سنة\nدرجة حرارة السطح (قمم السحب): -201°م\nعملاق جليدي",
+            en: "Diameter: 49,244 km\nMass: 1.02 × 10²⁶ kg\nOrbit: 164.8 years\nCloud Top Temp: -201°C\nIce giant",
+          },
+          fact: {
+              ar: "نبتون هو أبعد كوكب عن الشمس ويتميز بلونه الأزرق العميق ورياحه الأسرع في النظام الشمسي.",
+              en: "Neptune is the farthest planet from the Sun, known for its deep blue color and the fastest winds in the Solar System."
+          },
+          extraFacts: [
+              { ar: "تم اكتشاف نبتون رياضيًا قبل رؤيته مباشرة، بناءً على الاضطرابات في مدار أورانوس.", en: "Neptune was discovered mathematically before being directly observed, based on perturbations in Uranus's orbit." },
+              { ar: "يمكن أن تصل سرعة الرياح على نبتون إلى أكثر من 2000 كيلومتر في الساعة.", en: "Winds on Neptune can reach speeds of over 2,000 kilometers per hour (1,200 mph)." },
+              { ar: "أكبر أقمار نبتون، ترايتون، يدور حول الكوكب في اتجاه تراجعي (معاكس لدوران نبتون) ويُعتقد أنه جسم تم أسره من حزام كايبر.", en: "Neptune's largest moon, Triton, orbits the planet in a retrograde direction (opposite to Neptune's rotation) and is likely a captured Kuiper Belt Object." }
+          ]
+        }
+      ];
+
+      // --- THREE.js Setup (Unchanged from previous versions) ---
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75,window.innerWidth / window.innerHeight, 0.1, 2000);
+      camera.position.set(0, 50, 100);
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.maxDistance = 400; controls.minDistance = 10;
+      controls.enableDamping = true; controls.dampingFactor = 0.05;
+      let focusedPlanetIndex = -1; let isFollowingPlanet = false; let followAnimationId = null;
+      controls.addEventListener("start", () => { isFollowingPlanet = false; focusedPlanetIndex = -1; if (followAnimationId) cancelAnimationFrame(followAnimationId); });
+      const sunLight = new THREE.PointLight(0xffffff, 1.5, 1500); scene.add(sunLight);
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.6); scene.add(ambientLight);
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.3); hemiLight.position.set(0, 100, 0); scene.add(hemiLight);
+      const loader = new THREE.TextureLoader();
+      const starGeometry = new THREE.BufferGeometry(); const starCount = 7000;
+      const positions = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount; i++) { positions[i * 3] = (Math.random() - 0.5) * 2500; positions[i * 3 + 1] = (Math.random() - 0.5) * 2500; positions[i * 3 + 2] = (Math.random() - 0.5) * 2500;}
+      starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15 }); const stars = new THREE.Points(starGeometry, starMaterial); scene.add(stars);
+      const planetMeshes = [];
+      planetsData.forEach((planet) => {
+        const geometry = new THREE.SphereGeometry(planet.radius, 64, 64);
+        const material = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: planet.id === 0 ? 0xffff00 : 0x000000, emissiveIntensity: planet.id === 0 ? 1.8 : 0, });
+        loader.load(`textures/${planet.texture}`, (texture) => { material.map = texture; if (planet.id === 0) { material.emissiveMap = texture; material.emissive = new THREE.Color(0xffffaa); material.emissiveIntensity = 1.2;} material.needsUpdate = true; }, undefined, (err) => console.error(`Error loading texture: ${planet.texture}`, err));
+        const mesh = new THREE.Mesh(geometry, material); mesh.position.x = planet.distance; mesh.rotation.x = (planet.tilt * Math.PI) / 180; mesh.userData.id = planet.id; scene.add(mesh);
+        if (planet.distance > 0) { const points = []; const segments = 128; for (let i = 0; i <= segments; i++) { const theta = (i / segments) * Math.PI * 2; points.push(new THREE.Vector3(Math.cos(theta) * planet.distance, 0, Math.sin(theta) * planet.distance));} const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points); const colorMap = { 1: 0xaaaaaa, 2: 0xffcc99, 3: 0x3399ff, 4: 0xff3333, 5: 0xffaa33, 6: 0xffdd77, 7: 0x66ccff, 8: 0x3366cc, }; const orbitMaterial = new THREE.LineBasicMaterial({ color: colorMap[planet.id] || 0xffffff, transparent: true, opacity: 0.4, }); const orbit = new THREE.Line(orbitGeometry, orbitMaterial); scene.add(orbit);}
+        if (planet.id === 6) { const ringTexture = loader.load("textures/saturn_ring.png"); const innerRadius = planet.radius * 1.2; const outerRadius = planet.radius * 2.2; const ringGeometry = new THREE.RingGeometry(innerRadius, outerRadius, 64); var pos = ringGeometry.attributes.position; var v3 = new THREE.Vector3(); for (let i = 0; i < pos.count; i++){ v3.fromBufferAttribute(pos, i); ringGeometry.attributes.uv.setXY(i, v3.length() < innerRadius + 0.1 ? 0 : 1, 1); } const ringMaterial = new THREE.MeshBasicMaterial({ map: ringTexture, color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.8 }); const rings = new THREE.Mesh(ringGeometry, ringMaterial); rings.rotation.x = Math.PI / 2; mesh.add(rings); }
+        if (planet.id === 5) { const spotGeometry = new THREE.SphereGeometry(planet.radius * 0.2, 16, 16); const spotMaterial = new THREE.MeshBasicMaterial({ color: 0xbb5533, transparent: true, opacity: 0.8 }); const redSpot = new THREE.Mesh(spotGeometry, spotMaterial); redSpot.position.set(0, planet.radius * 0.5, planet.radius * 0.85); mesh.add(redSpot); }
+        planetMeshes.push({ mesh, planetData: planet, angle: Math.random() * Math.PI * 2 });
+      });
+      const asteroidGeometry = new THREE.BufferGeometry(); const asteroidCount = 1500; const asteroidPos = new Float32Array(asteroidCount * 3); const marsOrbit = planetsData.find(p => p.id === 4).distance; const jupiterOrbit = planetsData.find(p => p.id === 5).distance; const beltInnerRadius = marsOrbit + 3; const beltOuterRadius = jupiterOrbit - 5; const beltWidth = beltOuterRadius - beltInnerRadius; for (let i = 0; i < asteroidCount; i++) { const angle = Math.random() * Math.PI * 2; const radius = beltInnerRadius + Math.random() * beltWidth; asteroidPos[i * 3] = Math.cos(angle) * radius; asteroidPos[i * 3 + 1] = (Math.random() - 0.5) * 1.0; asteroidPos[i * 3 + 2] = Math.sin(angle) * radius; } asteroidGeometry.setAttribute('position', new THREE.BufferAttribute(asteroidPos, 3)); const asteroidMaterial = new THREE.PointsMaterial({ color: 0xaaaaaa, size: 0.08 }); const asteroids = new THREE.Points(asteroidGeometry, asteroidMaterial); scene.add(asteroids);
+      const cometGeometry = new THREE.SphereGeometry(0.2, 16, 16); const cometMaterial = new THREE.MeshBasicMaterial({ color: 0xaaddff }); const comet = new THREE.Mesh(cometGeometry, cometMaterial); scene.add(comet); const tailPoints = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -2)]; const tailGeometry = new THREE.BufferGeometry().setFromPoints(tailPoints); const tailMaterial = new THREE.LineBasicMaterial({ color: 0xaaddff, transparent: true, opacity: 0.6, linewidth: 2 }); const tail = new THREE.Line(tailGeometry, tailMaterial); comet.add(tail);
+      const dustGeometry = new THREE.BufferGeometry(); const dustCount = 1000; const dustPos = new Float32Array(dustCount * 3); for (let i = 0; i < dustCount; i++) { dustPos[i * 3] = (Math.random() - 0.5) * 200; dustPos[i * 3 + 1] = (Math.random() - 0.5) * 200; dustPos[i * 3 + 2] = (Math.random() - 0.5) * 200; } dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPos, 3)); const dustMaterial = new THREE.PointsMaterial({ color: 0x777777, size: 0.05, transparent: true, opacity: 0.4, }); const dust = new THREE.Points(dustGeometry, dustMaterial); scene.add(dust);
+
+      // --- DOM Elements ---
+      const infoPanel = document.getElementById("infoPanel");
+      const planetNameEl = document.getElementById("planetName");
+      const planetInfoEl = document.getElementById("planetInfo");
+      const planetFactEl = document.getElementById("planetFact");
+      const closeBtn = document.getElementById("closeBtn");
+      const planetsMenu = document.getElementById("planetsMenu");
+      const planetsDropdown = document.getElementById("planetsDropdown");
+      const langToggleBtn = document.getElementById("langToggleBtn");
+      const bodyEl = document.body;
+      const readMoreBtn = document.getElementById("readMoreBtn"); // New Button
+      const extraFactsContainer = document.getElementById("extraFactsContainer"); // New Container
+
+      // --- Raycasting ---
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      // --- Event Listeners ---
+      window.addEventListener("click", (event) => {
+        // Prevent clicks on menu/infopanel from triggering raycast
+        if (event.target.closest('#menuBar') || event.target.closest('#infoPanel')) {
+             return;
+        }
+
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObjects(planetMeshes.map((p) => p.mesh));
+
+        // ***** THIS IS THE MODIFIED PART for click-to-follow *****
+        if (intersects.length > 0) {
+          const clickedPlanetMesh = intersects[0].object;
+          const planetId = clickedPlanetMesh.userData.id; // Get the ID stored earlier
+
+          // Check if a valid ID was retrieved
+          if (planetId !== undefined) {
+              // Call the same function used by the dropdown menu
+              focusOnPlanet(planetId);
+          }
+        }
+        // ***** END OF MODIFICATION *****
+         else {
+            // Optional: Clicking empty space could potentially stop following
+            // if (isFollowingPlanet) {
+            //    isFollowingPlanet = false;
+            //    focusedPlanetIndex = -1;
+            // }
+        }
+      });
+
+      closeBtn.addEventListener("click", () => {
+        infoPanel.style.display = "none";
+        isFollowingPlanet = false; focusedPlanetIndex = -1;
+        currentlyDisplayedPlanetId = null; // Reset tracked planet
+      });
+
+      planetsMenu.addEventListener("click", (e) => {
+        e.stopPropagation(); planetsDropdown.classList.toggle("show");
+      });
+
+      // Close dropdown if clicking outside
+      document.addEventListener("click", (e) => {
+          if (!planetsMenu.contains(e.target)) {
+              planetsDropdown.classList.remove('show');
+          }
+      });
+
+
+      langToggleBtn.addEventListener("click", () => {
+          currentLanguage = currentLanguage === 'ar' ? 'en' : 'ar';
+          updateLanguageUI();
+      });
+
+       // Event Listener for Read More Button
+       readMoreBtn.addEventListener("click", () => {
+           const planetId = parseInt(readMoreBtn.getAttribute('data-planet-id'));
+           if (isNaN(planetId)) return; // Exit if no valid ID
+
+           const planetData = planetsData.find(p => p.id === planetId);
+           if (planetData && planetData.extraFacts) {
+               populateExtraFacts(planetData.extraFacts);
+               extraFactsContainer.style.display = 'block';
+               readMoreBtn.style.display = 'none'; // Hide button after clicking
+           }
+       });
+
+      // --- Functions ---
+
+       function populateExtraFacts(facts) {
+            extraFactsContainer.innerHTML = ''; // Clear previous facts
+            facts.forEach(fact => {
+                const p = document.createElement('p');
+                p.textContent = fact[currentLanguage];
+                extraFactsContainer.appendChild(p);
+            });
+       }
+
+      function displayPlanetInfo(planetData) {
+         planetNameEl.textContent = planetData.name[currentLanguage];
+         planetInfoEl.innerHTML = planetData.info[currentLanguage].replace(/\n/g, "<br>");
+         planetFactEl.textContent = planetData.fact[currentLanguage];
+         currentlyDisplayedPlanetId = planetData.id; // Track current planet
+
+         // Reset and setup Read More section
+         extraFactsContainer.style.display = 'none';
+         extraFactsContainer.innerHTML = ''; // Clear old facts
+         if (planetData.extraFacts && planetData.extraFacts.length > 0) {
+             readMoreBtn.style.display = 'block'; // Show button if facts exist
+             readMoreBtn.setAttribute('data-planet-id', planetData.id); // Set ID for button listener
+             readMoreBtn.textContent = uiText.readMore[currentLanguage]; // Set button text
+         } else {
+             readMoreBtn.style.display = 'none'; // Hide button if no extra facts
+         }
+
+         infoPanel.style.display = "block";
+         infoPanel.scrollTop = 0; // Scroll to top when displaying new info
+      }
+
+
+      function updateLanguageUI() {
+          bodyEl.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
+          planetsMenu.firstChild.textContent = uiText.planetsMenu[currentLanguage].trim();
+          langToggleBtn.textContent = uiText.langToggle[currentLanguage];
+          readMoreBtn.textContent = uiText.readMore[currentLanguage]; // Update button text
+
+          // Update dropdown items
+          planetsDropdown.innerHTML = '';
+          planetsData.forEach((planet) => {
+              const item = document.createElement("a");
+              item.href = "#"; item.classList.add("dropdown-item");
+              item.setAttribute("data-planet-id", planet.id);
+              item.textContent = planet.name[currentLanguage];
+              item.addEventListener("click", (e) => {
+                  e.preventDefault(); e.stopPropagation();
+                  const planetId = parseInt(item.getAttribute("data-planet-id"));
+                  focusOnPlanet(planetId);
+                  planetsDropdown.classList.remove("show");
+              });
+              planetsDropdown.appendChild(item);
+          });
+
+           // If info panel is open, update its content
+           if (currentlyDisplayedPlanetId !== null) {
+               const currentPlanetData = planetsData.find(p => p.id === currentlyDisplayedPlanetId);
+               if (currentPlanetData) {
+                   // Re-display main info in new language
+                   planetNameEl.textContent = currentPlanetData.name[currentLanguage];
+                   planetInfoEl.innerHTML = currentPlanetData.info[currentLanguage].replace(/\n/g, "<br>");
+                   planetFactEl.textContent = currentPlanetData.fact[currentLanguage];
+                   // Update Read More button text (already done above)
+                   readMoreBtn.setAttribute('data-planet-id', currentPlanetData.id); // Ensure ID is set
+
+                   // If extra facts are currently visible, update their language
+                   if (extraFactsContainer.style.display === 'block' && currentPlanetData.extraFacts) {
+                        populateExtraFacts(currentPlanetData.extraFacts);
+                   }
+                   // Ensure Read More button visibility is correct for the current state
+                   if (extraFactsContainer.style.display !== 'block' && currentPlanetData.extraFacts && currentPlanetData.extraFacts.length > 0) {
+                        readMoreBtn.style.display = 'block';
+                   } else {
+                        readMoreBtn.style.display = 'none';
+                   }
+               }
+           }
+
+         infoPanel.style.textAlign = currentLanguage === 'ar' ? 'right' : 'left';
+      }
+
+
+      function focusOnPlanet(planetId) {
+          const planetIndex = planetsData.findIndex(p => p.id === planetId);
+          if (planetIndex === -1) return;
+          const targetPlanet = planetMeshes[planetIndex]; const targetData = targetPlanet.planetData;
+          if (followAnimationId) cancelAnimationFrame(followAnimationId);
+          focusedPlanetIndex = planetIndex; infoPanel.style.display = 'none'; currentlyDisplayedPlanetId = null; // Hide panel during transition
+          const startPosition = camera.position.clone(); const startTarget = controls.target.clone();
+          const endTarget = targetPlanet.mesh.position.clone();
+          const offsetDistance = targetData.radius * (targetData.id === 0 ? 5 : 8);
+          const direction = new THREE.Vector3(0, 0.2, 1); direction.applyQuaternion(targetPlanet.mesh.quaternion); direction.normalize();
+          const endPosition = endTarget.clone().add(direction.multiplyScalar(offsetDistance));
+          const duration = 1500; const startTime = Date.now();
+          function animateCameraFocus() {
+              const elapsed = Date.now() - startTime; const progress = Math.min(elapsed / duration, 1);
+              const easeProgress = 0.5 * (1 - Math.cos(Math.PI * progress)); // Ease-in-out
+              camera.position.lerpVectors(startPosition, endPosition, easeProgress);
+              controls.target.lerpVectors(startTarget, endTarget, easeProgress); controls.update();
+              if (progress < 1) { followAnimationId = requestAnimationFrame(animateCameraFocus); }
+              else { followAnimationId = null; isFollowingPlanet = true; controls.target.copy(endTarget); camera.position.copy(endPosition); controls.update(); displayPlanetInfo(targetData); } // Show info AFTER arriving
+          }
+          animateCameraFocus();
+      }
+
+
+      // --- Animation Loop (Unchanged logic, just formatted for brevity) ---
+      function animate() {
+        requestAnimationFrame(animate);
+        const delta = Date.now() * 0.0001;
+        planetMeshes.forEach((p, index) => {
+          const { mesh, planetData } = p;
+          mesh.rotation.y += planetData.rotation * 0.1;
+          if (planetData.distance > 0) { p.angle += planetData.speed * 0.5; mesh.position.x = Math.cos(p.angle) * planetData.distance; mesh.position.z = Math.sin(p.angle) * planetData.distance; }
+          if (isFollowingPlanet && index === focusedPlanetIndex) { const currentTargetPosition = mesh.position.clone(); controls.target.copy(currentTargetPosition); const offsetDistance = planetData.radius * (planetData.id === 0 ? 5 : 8); const direction = new THREE.Vector3(0, 0.2, 1); direction.applyQuaternion(mesh.quaternion); direction.normalize(); const desiredPosition = currentTargetPosition.clone().add(direction.multiplyScalar(offsetDistance)); camera.position.lerp(desiredPosition, 0.05); }
+        });
+         const cometTime = Date.now() * 0.0002; const cometSemiMajor = 80; const cometSemiMinor = 50; comet.position.x = Math.cos(cometTime) * cometSemiMajor; comet.position.z = Math.sin(cometTime) * cometSemiMinor; comet.position.y = Math.sin(cometTime * 0.7) * 15; const dirToSun = comet.position.clone().normalize().negate(); comet.lookAt(comet.position.clone().add(dirToSun));
+        controls.update(); renderer.render(scene, camera);
+      }
+
+      // --- Initial Setup ---
+      updateLanguageUI();
+      animate();
+
+      // --- Resize Listener ---
+      window.addEventListener("resize", () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+    </script>
+  </body>
+</html>
